@@ -6,13 +6,9 @@ async.series([
     twitter.initialise,
     google.initialise
 ], function (err) {
-    twitter.search("#valentinesday", function (err, statuses) {
-        console.log(statuses[0]);
+    twitter.listen([ "#valentinesday"], function (words) {
+        process.stdout.write(Array(words.length + 1).join("."));
+        google.writeWords(words);
     });
-    /*
-    google.writeTweet(function (err) {
-        console.log("Finshed");
-    });
-    */
 })
 

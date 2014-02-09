@@ -1,100 +1,52 @@
 var SECRET_FILENAME = "./TWITTER_API_SECRET.json",
-    SECRET_CACHE_FILENAME = "./TWITTER_OAUTH_TOKENS_CACHE.json",
-    RATE_LIMIT_WINDOW = 900.,
-    API_REQUESTS_TIMEOUT = 3000; // 15 minutes: Twitter's window as of 1/1/2014
+    STOPWORDS = [ "i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "would", "should", "could", "ought", "i'm", "you're", "he's", "she's", "it's", "we're", "they're", "i've", "you've", "we've", "they've", "i'd", "you'd", "he'd", "she'd", "we'd", "they'd", "i'll", "you'll", "he'll", "she'll", "we'll", "they'll", "isn't", "aren't", "wasn't", "weren't", "hasn't", "haven't", "hadn't", "doesn't", "don't", "didn't", "won't", "wouldn't", "shan't", "shouldn't", "can't", "cannot", "couldn't", "mustn't", "let's", "that's", "who's", "what's", "here's", "there's", "when's", "where's", "why's", "how's", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very" ],
+    MIN_WORD_LENGTH = 4;
 
-var async = require('async'),
-    fs = require('fs'),
-    qs = require('querystring'),
-    readline = require("readline"),
-    request = require("request"),
-    SECRET = JSON.parse(fs.readFileSync(SECRET_FILENAME)),
-    oauth;
-
-function log (s) {
-    var entryDate = new Date();
-    console.log("twitter.js " + entryDate.getFullYear() + "/" + (entryDate.getMonth() < 9 ? '0' : '') + (entryDate.getMonth() + 1) + "/" + (entryDate.getDate() < 10 ? '0' : '') + entryDate.getDate() + " " + (entryDate.getHours() < 10 ? '0' : '') + entryDate.getHours() + ":" + (entryDate.getMinutes() < 10 ? '0' : '') + entryDate.getMinutes() + ":" + (entryDate.getSeconds() < 10 ? '0' : '') + entryDate.getSeconds() + " - " + s);
-}
+var fs = require('fs'),
+    ntwitter = require("ntwitter"),
+    twitterClient;
 
 exports.initialise = function (callback) {
-    if (!fs.existsSync(SECRET_CACHE_FILENAME)) {
-        var tempOauth = { 
-                callback: 'http://www.digitalcontraptionsimaginarium.co.uk', 
-                consumer_key: TWITTER_SECRET.api_key, 
-                consumer_secret: TWITTER_SECRET.api_secret
-            },
-            url = 'https://api.twitter.com/oauth/request_token';
-        request.post({url: url, oauth: tempOauth, timeout: API_REQUESTS_TIMEOUT }, function (error, response, body) {   
-            var rl = readline.createInterface({
-                    input: process.stdin,
-                    output: process.stdout
-                });
-            rl.question("Go to *** http://api.twitter.com/oauth/authorize?" + body + " ***, authorise the application and then paste back here the URL you are redirected to: ", function(line) {
-                rl.close();
-                line = line.split("?")[1];
-                var perm_token = qs.parse(line); 
-                oauth = { 
-                    consumer_key: TWITTER_SECRET.api_key, 
-                    consumer_secret: TWITTER_SECRET.api_secret, 
-                    oauth_token: perm_token.oauth_token,
-                    oauth_verifier: perm_token.oauth_verifier
-                };
-                fs.writeFileSync(SECRET_CACHE_FILENAME, JSON.stringify(oauth));
-                callback(null);
-            });
+    var SECRET = JSON.parse(fs.readFileSync(SECRET_FILENAME));
+    twitterClient = new ntwitter({
+            consumer_key: SECRET.api_key,
+            consumer_secret: SECRET.api_secret,
+            access_token_key: SECRET.access_token,
+            access_token_secret: SECRET.access_token_secret 
         });
-    } else {
-        oauth = JSON.parse(fs.readFileSync(SECRET_CACHE_FILENAME));
-        callback(null);
-    }
+    callback(null);
 }
 
-var // difficult to decide how often to run this, let's do once an hour; it is 
-    // like saying that there won't be more than SEARCH_READING_DEPTH new 
-    // messages to be found every hour
-    SEARCH_LOOP_FREQUENCY = 3600., // seconds
-    // Twitter's current max
-    SEARCH_READING_DEPTH = 100, 
-    // Twitter's current limit
-    RATE_SEARCH_TWEETS = 450.;
-
-var searchQueue = async.queue(function (searchString, callback) {
-    var timeStart = new Date();
-    request.get(
-        { 
-            url: "https://api.twitter.com/1.1/search/tweets.json",
-            qs: { q: searchString, count: SEARCH_READING_DEPTH }, 
-            oauth: oauth, 
-            json: true,
-            timeout: API_REQUESTS_TIMEOUT
-        }, 
-        function (err, response, body) {
-            err = (body || { errors: null }).errors ? new Error(body.errors[0].message) : err;
-            if (err) {
-                log("*** ERROR: " + err);
-                body = { statuses: [ ] };
-            } else {
-                body.statuses = body.statuses.map(function (tweet) {
-                    // search result also have a 'metadata' property I am not 
-                    // interested in
-                    delete tweet.metadata;
-                    // the trim_user parameter can't be used when searching, so I 
-                    // have to do the same manually, for all tweets in the archive
-                    // to be consistent
-                    var temp = tweet.user;
-                    delete tweet.user;
-                    tweet.user = { id: temp.id, id_str: temp.id_str };
-                    return tweet;
-                });
-            }
-            var earliestNewCall = new Date(timeStart.valueOf() + RATE_LIMIT_WINDOW / RATE_SEARCH_TWEETS * 1000.),
-                neededWait = Math.max(0, earliestNewCall - (new Date()));
-            log("Search for \"" + searchString + "\" returned " + body.statuses.length + " tweets. Waiting " + neededWait + "ms for throttling.");
-            setTimeout(function () { callback(null, body.statuses); }, neededWait);
-        }
-    );
-}, 1);
-
-exports.search = function (searchString, callback) {
-    searchQueue.push(searchString, callback);    
+exports.listen = function (searchStrings, callback) {
+    twitterClient.stream('statuses/filter', { track: searchStrings, language: "en" }, function (stream) {
+        stream.on('error', function(error, code) {
+            console.log("Error " + error + ": " + code);
+        });
+        stream.on('data', function (data) { 
+            var entryDate = new Date(data.created_at),
+                dateString = entryDate.getFullYear() + "-" + (entryDate.getMonth() < 9 ? '0' : '') + (entryDate.getMonth() + 1) + "-" + (entryDate.getDate() < 10 ? '0' : '') + entryDate.getDate() + " " + (entryDate.getHours() < 10 ? '0' : '') + entryDate.getHours() + ":" + (entryDate.getMinutes() < 10 ? '0' : '') + entryDate.getMinutes() + ":" + (entryDate.getSeconds() < 10 ? '0' : '') + entryDate.getSeconds();
+            callback(data.text
+                // remove the "emoticon" block, U+1F600 - U+1F64F, and the "Miscellaneous Symbols And Pictographs" block, U+1F300 - U+1F5FF
+                .replace(/[\u1f300-\u1f64f]/, " ")
+                // remove URLs
+                .replace(/\b(https?|ftp|file):\/\/[\-A-Za-z0-9+&@#\/%?=~_|!:,.;]*[\-A-Za-z0-9+&@#\/%=~_| ]/, "")
+                // remove other punctuation
+                .replace(/[\.…,-\/!\?$%\^&\*;:{}=\-_`\"~()]/g, " ")
+                // remove Twitter usernames
+                // TODO: THIS IS STILL NOT CAPTURING ALL OF THEM
+                .replace(/(^|[^@\w])@(\w{1,15})\b/, "")
+                // remove HTML special characters
+                .replace(/&[A-Za-z0-9_]+;/, "")
+                // remove other strange characters with spaces
+                .replace(/\n\t/, " ")
+                .split(" ")
+                // remove short words
+                .filter(function (word) { return word.length > MIN_WORD_LENGTH; })
+                .map(function (word) { return word.toLowerCase(); })
+                .filter(function (word) { return STOPWORDS.indexOf(word) === -1; })
+                .map(function (word) {
+                    return { created_at: dateString, word: word };
+            }));
+        });
+    });
 }

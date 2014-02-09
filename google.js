@@ -40,20 +40,18 @@ exports.initialise = function (callback) {
         });
 }
 
-exports.writeTweet = function (callback) {
+exports.writeWords = function (words, callback) {
     client
         .bigquery.tabledata.insertAll({
             projectId: "vaulted-gate-486",
             datasetId: "main",
-            tableId: "tweets",
+            tableId: "words",
         }, {
             kind: "bigquery#tableDataInsertAllRequest",
-            rows: [
-                { json: { content: "lippa " + (new Date()) } }                                    
-            ]
+            rows: words.map(function (word) { return { json: { created_at: word.created_at, word: word.word } }; })
         })
         .withAuthClient(oauth2Client)
         .execute(function (err, response) {
-            console.log("response is " + JSON.stringify(response));
+            if (callback) callback(null);
         });
 }
