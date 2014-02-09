@@ -40,17 +40,27 @@ initialiseGoogleApis(function (err, googleApiClient) {
     function repeat () {
         var access_token_before = oauth2Client.credentials.access_Token;
         googleApiClient
-            .bigquery.datasets.list({
-                projectId: "pro-kayak-479"
+            .bigquery.tabledata.insertAll({
+                projectId: "vaulted-gate-486",
+                datasetId: "main",
+                tableId: "tweets",
+            }, {
+                kind: "bigquery#tableDataInsertAllRequest",
+                rows: [
+                    { json: { content: "lippa " + (new Date()) } }                                    
+                ]
             })
             .withAuthClient(oauth2Client)
             .execute(function (err, response) {
+                if (err) {
+                    console.log("ERROR: " + JSON.stringify(err));
+                }
                 if (oauth2Client.credentials.access_Token != access_token_before) {
                     console.log("***** oauth2Client.credentials.access_Token has changed");
                     fs.writeFileSync("./GOOGLE_OAUTH_TOKENS_CACHE.json", JSON.stringify(oauth2Client.credentials));
                 }
-                console.log("response is " + JSON.stringify(response));
-                setTimeout(repeat, 5000);
+                // console.log("response is " + JSON.stringify(response));
+                setTimeout(repeat, 1000);
             });
     }
     repeat()
