@@ -27,7 +27,7 @@ exports.toCSV = function (callback) {
 			var temp = db[timestamp];
 			temp.timestamp = timestamp;
 			return temp;
-		}))
+		}).sort(function (a, b) { return a.timestamp - b.timestamp; }))
 		.to.string(function (data, count) {
 			callback(null, data);
 		}, {
