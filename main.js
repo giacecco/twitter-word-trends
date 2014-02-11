@@ -3,29 +3,36 @@ var async = require("async"),
 		.usage('Usage: $0 -s <search term 1> [-s <search term 2>...] [--reset] [--port <web server port to dowload csv report>]')
 		.demand([ "search"])
 		.alias("search", "s")
-		.default("port", 9615)
+		.default("port", 8080)
 		.argv;
     twitter = require("./twitter"),
     google = require("./google"),
     inMemory = require("./in_memory");
 
-function mainLoop (err) {
+function startSearch (err) {
     twitter.listen([ ].concat(argv.search), function (words) {
-        process.stdout.write(Array(words.length + 1).join("."));
+        // process.stdout.write(Array(words.length + 1).join("."));
+        process.stdout.write(words.map(function (w) { return w.word; }).join(" "));
         inMemory.writeWords(words);
         // google.writeWords(words);
     });
 }
 
 function launchWebServer () {
-	var http = require('http');
-	console.log("Download the CSV from http://localhost:" + argv.port);
-	http.createServer(function (req, res) {
+	var express = require("express"),
+		app = express(),
+		path = require("path");
+	app.set('port', parseInt(argv.port));
+	app.use(express.static(path.join(__dirname, 'wwwroot')));
+	app.get('/data/', function(req, res){
 		inMemory.toCSV(function (err, csv) {
-			res.writeHead(200, { 'Content-Type': 'text/csv' });
+			res.setHeader('Content-Type', 'text/csv');
+			res.setHeader('Content-Length', Buffer.byteLength(csv));
 			res.end(csv);
 		});
-	}).listen(parseInt(argv.port));	
+	})		;
+	app.listen();
+	console.log("The web server is listening at http://localhost" + (app.get('port') !== 80 ? ":" + argv.port : ""));
 }
 
 async.parallel([
@@ -37,7 +44,7 @@ async.parallel([
 		google.resetTable(mainLoop);
 	} else {
 		async.parallel([
-			mainLoop,
+			startSearch,
 			launchWebServer
 		]);
 	}

@@ -26,10 +26,15 @@ exports.listen = function (searchStrings, callback) {
             var entryDate = new Date(data.created_at),
                 dateString = entryDate.getFullYear() + "-" + (entryDate.getMonth() < 9 ? '0' : '') + (entryDate.getMonth() + 1) + "-" + (entryDate.getDate() < 10 ? '0' : '') + entryDate.getDate() + " " + (entryDate.getHours() < 10 ? '0' : '') + entryDate.getHours() + ":" + (entryDate.getMinutes() < 10 ? '0' : '') + entryDate.getMinutes() + ":" + (entryDate.getSeconds() < 10 ? '0' : '') + entryDate.getSeconds();
             callback(data.text
+                // remove other strange characters with spaces
+                .replace(/[\n\r\t]/, " ")
                 // remove the "emoticon" block, U+1F600 - U+1F64F, and the "Miscellaneous Symbols And Pictographs" block, U+1F300 - U+1F5FF
+                // TODO: I see many still not being captured
                 .replace(/[\u1f300-\u1f64f]/, " ")
                 // remove URLs
                 .replace(/\b(https?|ftp|file):\/\/[\-A-Za-z0-9+&@#\/%?=~_|!:,.;]*[\-A-Za-z0-9+&@#\/%=~_| ]/, "")
+                // remove 's
+                .replace(/'s[ $]/, "")
                 // remove other punctuation
                 .replace(/[\.…,-\/!\?$%\^&\*;:{}=\-_`\"~()]/g, " ")
                 // remove Twitter usernames
@@ -37,8 +42,6 @@ exports.listen = function (searchStrings, callback) {
                 .replace(/(^|[^@\w])@(\w{1,15})\b/, "")
                 // remove HTML special characters
                 .replace(/&[A-Za-z0-9_]+;/, "")
-                // remove other strange characters with spaces
-                .replace(/\n\t/, " ")
                 .split(" ")
                 // remove short words
                 .filter(function (word) { return word.length > MIN_WORD_LENGTH; })
