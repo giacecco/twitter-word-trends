@@ -1,4 +1,5 @@
 var csv = require("csv"),
+    util = require("./util"),
 	db = { };
 
 exports.initialise = function (callback) {
@@ -34,4 +35,14 @@ exports.toCSV = function (callback) {
 			header: true, 
 			columns: [ "timestamp"].concat(allWords)
 		});
+}
+
+exports.purge = function (earliestDateToKeep, callback) {
+	var earliestTimestampToKeep = util.date2Timestamp(earliestDateToKeep);
+    Object.keys(db)
+        .filter(function (key) { return key < earliestTimestampToKeep; })
+        .forEach(function (timestamp) {
+            delete db.key;
+        });
+    if (callback) callback(null);
 }
