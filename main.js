@@ -1,7 +1,8 @@
 var async = require("async"),
 	argv = require("optimist")
-		.usage('Usage: $0 -s <search term 1> [-s <search term 2>...] -m <memory length, in minutes> [--reset] [--port <web server port to dowload csv report>] [-l <max no. of results>] [-o]')
+		.usage('Usage: $0 -s <search term 1> [-s <search term 2>...] -m <memory length, in minutes> [--reset] [--port <web server port to dowload csv report>] [-i <interval for consolidation, in minutes>] [-l <max no. of results>] [-o]')
 		.demand([ "memory", "search"])
+		.alias("interval", "i")
 		.alias("limit", "l")
 		.alias("memory", "m")
 		.alias("other", "o")
@@ -28,6 +29,7 @@ function launchWebServer () {
 	app.use(express.static(path.join(__dirname, 'wwwroot')));
 	app.get('/data/', function(req, res){
 		inMemory.toCSV({ 
+			interval: argv.interval ? parseInt(argv.interval) : null,
 			limit: argv.limit ? parseInt(argv.limit) : null, 
 			other: argv.other
 		}, function (err, csv) {
