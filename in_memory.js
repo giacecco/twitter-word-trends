@@ -23,6 +23,7 @@ exports.toCSV = function (options, callback) {
 		// I want a report of the top options.limit words, possibly including
 		// a 'others' category
 		Object.keys(db).forEach(function (timestamp) {
+			delete db[timestamp].other;
 			Object.keys(db[timestamp]).forEach(function (word) {
 				if (!totals[word]) totals[word] = 0;
 				totals[word]++;
@@ -53,7 +54,7 @@ exports.toCSV = function (options, callback) {
 	}
 	csv()
 		.from.array(Object.keys(db).map(function (timestamp) {
-			var temp = db[timestamp];
+			var temp = JSON.parse(JSON.stringify(db[timestamp]));
 			temp.timestamp = timestamp;
 			return temp;
 		}).sort(function (a, b) { return a.timestamp - b.timestamp; }))
