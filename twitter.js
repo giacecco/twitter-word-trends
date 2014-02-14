@@ -28,26 +28,23 @@ exports.listen = function (searchStrings, callback) {
                 dateString = util.date2Timestamp(entryDate);
             callback(data.text
                 // remove other strange characters with spaces
-                .replace(/[\n\r\t]/, " ")
-                // remove the "emoticon" block, U+1F600 - U+1F64F, and the "Miscellaneous Symbols And Pictographs" block, U+1F300 - U+1F5FF
-                // TODO: I see many still not being captured
-                .replace(/[\u1f300-\u1f64f]/, " ")
+                .replace(/[\n\r\t]/g, " ")
                 // remove URLs
-                .replace(/\b(https?|ftp|file):\/\/[\-A-Za-z0-9+&@#\/%?=~_|!:,.;]*[\-A-Za-z0-9+&@#\/%=~_| ]/, "")
-                // remove 's
-                .replace(/'s[ $]/, "")
-                // remove other punctuation
-                .replace(/[\.…,-\/!\?$%\^&\*;:{}=\-_`\"~()]/g, " ")
+                .replace(/\b(https?|ftp|file):\/\/[\-A-Za-z0-9+&@#\/%?=~_|!:,.;]*[\-A-Za-z0-9+&@#\/%=~_| ]/g, "")
                 // remove Twitter usernames
                 // TODO: THIS IS STILL NOT CAPTURING ALL OF THEM
-                .replace(/(^|[^@\w])@(\w{1,15})\b/, "")
-                // remove HTML special characters
-                .replace(/&[A-Za-z0-9_]+;/, "")
+                .replace(/(^|[^@\w])@(\w{1,15})\b/g, "")
+                // remove everything but word characters and spaces
+                .replace(/[^\w\s]/g, " ")
+                // split in the individual words
                 .split(" ")
                 // remove short words
                 .filter(function (word) { return word.length > MIN_WORD_LENGTH; })
+                // make lowercase
                 .map(function (word) { return word.toLowerCase(); })
+                // remove stopwords
                 .filter(function (word) { return STOPWORDS.indexOf(word) === -1; })
+                // passed!
                 .map(function (word) {
                     return { created_at: dateString, word: word };
             }));
