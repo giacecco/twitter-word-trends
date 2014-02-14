@@ -5,7 +5,7 @@ twitter-word-trends
 
 This compact Node.js server monitors Twitter's stream for a chosen set of keywords and serves the results for custom visualisations, such as the word cloud in the example below (being run at ~ 12pm GMT on Valentine's Day 2014):
 
-    node main.js -search valentinesday -search vday --memory 1 --purge 1 --limit 100
+    node main.js -search valentinesday -search vday --memory 1 --purge 1 --limit 250
 
 ![example screenshot](docs/screenshot1.png)
 
