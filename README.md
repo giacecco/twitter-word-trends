@@ -1,6 +1,17 @@
-# LICENCE
+twitter-word-trends
+===================
 
-## Example website
+## Introduction
+
+This compact Node.js server monitors Twitter's stream for a chosen set of keywords and serves the results for custom visualisations, such as the word cloud in the example below (being run at ~ 12pm GMT on Valentine's Day 2014):
+
+    node main.js -search valentinesday -search vday --memory 1 --purge 1 --limit 100
+
+![example screenshot](docs/screenshot1.png)
+
+## Licence
+
+### Example website
 
 The example website in the [wwwroot](wwwroot/) folder is derived from Jason Davies' [Word Cloud Generator](http://www.jasondavies.com/wordcloud/), that is copyright (c) 2013, Jason Davies. All rights reserved. Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
@@ -10,7 +21,7 @@ The example website in the [wwwroot](wwwroot/) folder is derived from Jason Davi
 
   * The name Jason Davies may not be used to endorse or promote products derived from this software without specific prior written permission.
 
-## All other source and binaries
+### All other source and binaries
 
 Copyright (c) 2014 Gianfranco Cecconi.
 
