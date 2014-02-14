@@ -11,15 +11,12 @@ var async = require("async"),
 		.default("port", 8080)
 		.argv;
     twitter = require("./twitter"),
-    // google = require("./google"),
     inMemory = require("./in_memory");
 
 function startSearch (err) {
     twitter.listen([ ].concat(argv.search), function (words) {
         process.stdout.write(Array(words.length + 1).join("."));
-        // process.stdout.write(words.map(function (w) { return w.word; }).join(" "));
         inMemory.writeWords(words);
-        // google.writeWords(words);
     });
 }
 
@@ -60,7 +57,6 @@ async.parallel([
 	// all initialisation *independent* of command line parameters
     twitter.initialise,
     inMemory.initialise, 
-    // google.initialise, 
 ], function (err) {
 	if (argv.reset) {
 		// all initialisation *dependent* of command line parameters
