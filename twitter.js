@@ -32,10 +32,12 @@ exports.listen = function (searchStrings, callback) {
                 // remove URLs
                 .replace(/\b(https?|ftp|file):\/\/[\-A-Za-z0-9+&@#\/%?=~_|!:,.;]*[\-A-Za-z0-9+&@#\/%=~_| ]/g, "")
                 // remove Twitter usernames
-                // TODO: THIS IS STILL NOT CAPTURING ALL OF THEM
                 .replace(/(^|[^@\w])@(\w{1,15})\b/g, "")
                 // remove everything but word characters and spaces
                 .replace(/[^\w\s]/g, " ")
+                // remove numbers
+                // TODO: I did this, not sure it is ideal :-D
+                .replace(/\d+([,.]\d*)?([,.]\d*)?/g, " ")
                 // split in the individual words
                 .split(" ")
                 // remove short words
