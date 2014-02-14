@@ -24,32 +24,34 @@ exports.listen = function (searchStrings, callback) {
             console.log("Error " + error + ": " + code);
         });
         stream.on('data', function (data) { 
-            var entryDate = new Date(data.created_at),
-                dateString = util.date2Timestamp(entryDate);
-            callback(data.text
-                // remove other strange characters with spaces
-                .replace(/[\n\r\t]/g, " ")
-                // remove URLs
-                .replace(/\b(https?|ftp|file):\/\/[\-A-Za-z0-9+&@#\/%?=~_|!:,.;]*[\-A-Za-z0-9+&@#\/%=~_| ]/g, "")
-                // remove Twitter usernames
-                .replace(/(^|[^@\w])@(\w{1,15})\b/g, "")
-                // remove everything but word characters and spaces
-                .replace(/[^\w\s]/g, " ")
-                // remove numbers
-                // TODO: I did this, not sure it is ideal :-D
-                .replace(/\d+([,.]\d*)?([,.]\d*)?/g, " ")
-                // split in the individual words
-                .split(" ")
-                // remove short words
-                .filter(function (word) { return word.length > MIN_WORD_LENGTH; })
-                // make lowercase
-                .map(function (word) { return word.toLowerCase(); })
-                // remove stopwords
-                .filter(function (word) { return STOPWORDS.indexOf(word) === -1; })
-                // passed!
-                .map(function (word) {
-                    return { created_at: dateString, word: word };
-            }));
+            if (data) {
+                var entryDate = new Date(data.created_at),
+                    dateString = util.date2Timestamp(entryDate);
+                callback(data.text
+                    // remove other strange characters with spaces
+                    .replace(/[\n\r\t]/g, " ")
+                    // remove URLs
+                    .replace(/\b(https?|ftp|file):\/\/[\-A-Za-z0-9+&@#\/%?=~_|!:,.;]*[\-A-Za-z0-9+&@#\/%=~_| ]/g, "")
+                    // remove Twitter usernames
+                    .replace(/(^|[^@\w])@(\w{1,15})\b/g, "")
+                    // remove everything but word characters and spaces
+                    .replace(/[^\w\s]/g, " ")
+                    // remove numbers
+                    // TODO: I did this, not sure it is ideal :-D
+                    .replace(/\d+([,.]\d*)?([,.]\d*)?/g, " ")
+                    // split in the individual words
+                    .split(" ")
+                    // remove short words
+                    .filter(function (word) { return word.length > MIN_WORD_LENGTH; })
+                    // make lowercase
+                    .map(function (word) { return word.toLowerCase(); })
+                    // remove stopwords
+                    .filter(function (word) { return STOPWORDS.indexOf(word) === -1; })
+                    // passed!
+                    .map(function (word) {
+                        return { created_at: dateString, word: word };
+                }));
+            }
         });
     });
 }
