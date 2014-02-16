@@ -1,6 +1,6 @@
 var async = require("async"),
 	argv = require("optimist")
-		.usage('Usage: $0 -s <search term 1> [-s <search term 2>...] -m <memory length, in minutes> -w <web server static root folder> [-f <database dump filename>] [-p <purge frequency, in minutes>] [--reset] [--port <web server port to dowload csv report>] [-i <interval for consolidation, in minutes>] [-l <max no. of results>] [-o]')
+		.usage('Usage: $0 -s <search term 1> [-s <search term 2>...] -m <memory length, in minutes> -w <web server static root folder> [-f <database dump filename>] [-p <purge frequency, in minutes, default is 5>] [--reset] [--port <web server port to dowload csv report>] [-i <interval for consolidation, in minutes>] [-l <max no. of results>] [-o]')
 		.demand([ "memory", "search"])
 		.alias("interval", "i")
 		.alias("filename", "f")
@@ -10,6 +10,7 @@ var async = require("async"),
 		.alias("purge", "p")
 		.alias("search", "s")
 		.alias("wwwroot", "w")
+		.default("purge", 5)
 		.default("port", 8080)
 		.argv;
     twitter = require("./twitter"),
@@ -43,7 +44,7 @@ function launchWebServer () {
 }
 
 function launchPurging () {
-	var PURGE_FREQUENCY = argv.purge ? parseInt(argv.purge) : 5; // minutes
+	var PURGE_FREQUENCY = parseInt(argv.purge);
 	function purge () {
 		var now = new Date(),
 			earliestDateToKeep = new Date((new Date()) - parseInt(argv.memory) * 60000);
@@ -61,9 +62,7 @@ function launchPurging () {
 async.parallel([
 	// all initialisation *independent* of command line parameters
     twitter.initialise,
-    function (callback) {
-    	inMemory.initialise({ filename: argv.filename }, callback);
-    } 
+    function (callback) { inMemory.initialise({ filename: argv.filename }, callback); } 
 ], function (err) {
 	// all operations
 	async.parallel([
