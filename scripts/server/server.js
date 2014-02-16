@@ -2,14 +2,17 @@ var async = require("async"),
 	argv = require("optimist")
 		.usage('Usage: $0 -s <search term 1> [-s <search term 2>...] -m <memory length, in minutes> -w <web server static root folder> [-f <database dump filename>] [-p <purge frequency, in minutes, default is 5>] [--reset] [--port <web server port to dowload csv report>] [-i <interval for consolidation, in minutes>] [-l <max no. of results>] [-o]')
 		.demand([ "memory", "search", "wwwroot" ])
-		.alias("interval", "i")
+		// parameters that can be specified on the command line only
 		.alias("filename", "f")
-		.alias("limit", "l")
 		.alias("memory", "m")
-		.alias("other", "o")
 		.alias("purge", "p")
 		.alias("search", "s")
 		.alias("wwwroot", "w")
+		// parameters that can be specified on the querystring, too
+		.alias("interval", "i")
+		.alias("limit", "l")
+		.alias("other", "o")
+		// defaults
 		.default("purge", 5)
 		.default("port", 8080)
 		.argv;
