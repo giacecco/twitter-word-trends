@@ -1,7 +1,7 @@
 var async = require("async"),
 	argv = require("optimist")
 		.usage('Usage: $0 -s <search term 1> [-s <search term 2>...] -m <memory length, in minutes> -w <web server static root folder> [-f <database dump filename>] [-p <purge frequency, in minutes, default is 5>] [--reset] [--port <web server port to dowload csv report>] [-i <interval for consolidation, in minutes>] [-l <max no. of results>] [-o]')
-		.demand([ "memory", "search"])
+		.demand([ "memory", "search", "wwwroot" ])
 		.alias("interval", "i")
 		.alias("filename", "f")
 		.alias("limit", "l")
@@ -59,15 +59,17 @@ function launchPurging () {
 	setTimeout(purge, PURGE_FREQUENCY * 60000);
 }
 
-async.parallel([
-	// all initialisation *independent* of command line parameters
-    twitter.initialise,
-    function (callback) { inMemory.initialise({ filename: argv.filename }, callback); } 
+async.series([
+	// all initialisation
+    function (callback) { inMemory.initialise({ filename: argv.filename }, callback); }, 
+    twitter.initialise
 ], function (err) {
-	// all operations
-	async.parallel([
-		startSearch,
-		launchPurging,
-		launchWebServer
-	]);
+	if (!err) {
+		// all operations
+		async.parallel([
+			startSearch,
+			launchPurging,
+			launchWebServer
+		]);
+	}
 });
