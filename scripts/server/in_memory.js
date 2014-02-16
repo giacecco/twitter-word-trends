@@ -1,8 +1,10 @@
 var csv = require("csv"),
+	fs = require("fs"),
     util = require("./util"),
 	db = { };
 
-exports.initialise = function (callback) {
+exports.initialise = function (options, callback) {
+	if (fs.existsSync(options.filename)) db = JSON.parse(fs.readFileSync(options.filename));
 	callback(null);
 }
 
@@ -87,12 +89,18 @@ exports.toCSV = function (options, callback) {
 		});
 }
 
-exports.purge = function (earliestDateToKeep, callback) {
-	var earliestTimestampToKeep = util.date2Timestamp(earliestDateToKeep);
+exports.purge = function (options, callback) {
+	var earliestTimestampToKeep = util.date2Timestamp(options.earliestDateToKeep);
     Object.keys(db)
         .filter(function (key) { return key < earliestTimestampToKeep; })
         .forEach(function (timestamp) {
             delete db.key;
         });
-    if (callback) callback(null);
+    if (options.filename) {
+	    fs.writeFile(options.filename, JSON.stringify(db), function (err) {
+	    	if (callback) callback(err);
+	    }); 
+	} else {
+	    if (callback) callback(null);
+    }
 }

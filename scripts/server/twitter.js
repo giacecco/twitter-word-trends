@@ -18,8 +18,8 @@ exports.initialise = function (callback) {
     callback(null);
 }
 
-exports.listen = function (searchStrings, callback) {
-    twitterClient.stream('statuses/filter', { track: searchStrings, language: "en" }, function (stream) {
+exports.listen = function (options, callback) {
+    twitterClient.stream('statuses/filter', { track: options.searchStrings, language: "en" }, function (stream) {
         stream.on('error', function(error, code) {
             console.log("Error " + error + ": " + code);
         });
