@@ -76,11 +76,13 @@ exports.toCSV = function (options, callback) {
 		}, [ ]).sort();
 	}
 	csv()
+		// TODO: odd here, if I explicitly sort the array in .from.array, it
+		// actually gets un-sorted!!!
 		.from.array(Object.keys(consolidatedDb).map(function (timestamp) {
 			var temp = JSON.parse(JSON.stringify(consolidatedDb[timestamp]));
 			temp.timestamp = timestamp;
 			return temp;
-		}).sort(function (a, b) { return a.timestamp - b.timestamp; }))
+		}))
 		.to.string(function (data, count) {
 			callback(null, data);
 		}, {
