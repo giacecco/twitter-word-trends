@@ -19,7 +19,7 @@ exports.writeWords = function (words, callback) {
 exports.toCSV = function (options, callback) {
 	var // TODO: is there a better way to clone an object?
 		consolidatedDb = JSON.parse(JSON.stringify(db)),
-		totals = { },
+		totals,
 		allWords;
 	if (options.interval) {
 		consolidatedDb = { };
@@ -46,14 +46,15 @@ exports.toCSV = function (options, callback) {
 	if (options.limit) {
 		// I want a report of the top options.limit words, possibly including
 		// a 'others' category
+		totals = { };
 		Object.keys(consolidatedDb).forEach(function (timestamp) {
 			Object.keys(consolidatedDb[timestamp]).forEach(function (word) {
-				totals[word] = (totals[word] ? totals[word] : 0) + consolidatedDb[timestamp][word];
+				totals[word] = (totals[word] || 0) + consolidatedDb[timestamp][word];
 			});
 		});
 		totals = Object.keys(totals).map(function (word) {
 			return { word: word, total: totals[word] };
-		}).sort(function (a, b) { return a - b; }).slice(0, options.limit - (options.other ? 1 : 0));
+		}).sort(function (a, b) { return b.total - a.total; }).slice(0, options.limit - (options.other ? 1 : 0));
 		allWords = totals.map(function (t) { return t.word; });
 		if (options.other) {
 			// Using "other" is ok as it is a stopword in English

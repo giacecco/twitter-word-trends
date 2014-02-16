@@ -11,6 +11,8 @@ fetchReport <- function (interval = NA, limit = NA, other = FALSE) {
     temp <- tbl_df(read.csv(pipe(command), header = TRUE))
     # force the timestamp column to POSIXct, which dplyr can work with
     temp$timestamp <- as.POSIXct(strptime(temp$timestamp, "%Y-%m-%d %H:%M:%S"))
+    # force all NAs to zero
+    temp[is.na(temp)] <- 0
     return(temp)
 }
 
