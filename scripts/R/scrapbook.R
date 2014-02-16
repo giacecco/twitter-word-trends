@@ -1,0 +1,1 @@
+temp <- tbl_df(read.csv(pipe("curl http://localhost:8080/data/"), header=T))
