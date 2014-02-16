@@ -29,9 +29,9 @@ function launchWebServer () {
 	app.use(express.static(argv.wwwroot));
 	app.get('/data/', function(req, res){
 		inMemory.toCSV({ 
-			interval: argv.interval ? parseInt(argv.interval) : null,
-			limit: argv.limit ? parseInt(argv.limit) : null, 
-			other: argv.other
+			interval: req.query.interval || argv.interval ? parseInt(req.query.interval || argv.interval) : null,
+			limit: req.query.limit || argv.limit ? parseInt(req.query.limit || argv.limit) : null, 
+			other: ((typeof(req.query.other) === "string") ? req.query.other !== "false" : false) || argv.other
 		}, function (err, csv) {
 			res.setHeader('Content-Type', 'text/csv');
 			res.setHeader('Content-Length', Buffer.byteLength(csv));
