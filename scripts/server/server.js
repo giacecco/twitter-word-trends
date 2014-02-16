@@ -1,6 +1,6 @@
 var async = require("async"),
 	argv = require("optimist")
-		.usage('Usage: $0 -s <search term 1> [-s <search term 2>...] -m <memory length, in minutes> [-p <purge frequency, in minutes>] [--reset] [--port <web server port to dowload csv report>] [-i <interval for consolidation, in minutes>] [-l <max no. of results>] [-o]')
+		.usage('Usage: $0 -s <search term 1> [-s <search term 2>...] -m <memory length, in minutes> -w <web server static root folder> [-p <purge frequency, in minutes>] [--reset] [--port <web server port to dowload csv report>] [-i <interval for consolidation, in minutes>] [-l <max no. of results>] [-o]')
 		.demand([ "memory", "search"])
 		.alias("interval", "i")
 		.alias("limit", "l")
@@ -8,6 +8,7 @@ var async = require("async"),
 		.alias("other", "o")
 		.alias("purge", "p")
 		.alias("search", "s")
+		.alias("wwwroot", "w")
 		.default("port", 8080)
 		.argv;
     twitter = require("./twitter"),
@@ -24,7 +25,7 @@ function launchWebServer () {
 	var express = require("express"),
 		app = express(),
 		path = require("path");
-	app.use(express.static(path.join(__dirname, 'wwwroot')));
+	app.use(express.static(argv.wwwroot));
 	app.get('/data/', function(req, res){
 		inMemory.toCSV({ 
 			interval: argv.interval ? parseInt(argv.interval) : null,
